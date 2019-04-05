@@ -44,21 +44,21 @@ Dependencies
 
 TCRM requires:
 
- * `Python 2.7 <https://www.python.org/>`_;
+ * `Python 3.6.8  <https://www.python.org/>`_;
  * `numpy <http://www.numpy.org/>`_; 
  * `scipy <http://www.scipy.org/>`_;
- * `matplotlib 1.4.3 <http://matplotlib.org/>`_; 
- * `Basemap 1.0.8 <http://matplotlib.org/basemap/index.html>`_; 
- * `netcdf4-python >=1.4.1 <https://code.google.com/p/netcdf4-python/>`_; 
+ * `matplotlib 3.0.3 <http://matplotlib.org/>`_; 
+ * `Basemap 1.2.0 <http://matplotlib.org/basemap/index.html>`_; 
+ * `netcdf4-python >=1.3.1 <https://code.google.com/p/netcdf4-python/>`_; 
  * `pandas <http://pandas.pydata.org/>`_; 
- * `Shapely <https://github.com/Toblerity/Shapely>`_; 
- * `seaborn 0.6 <http://stanford.edu/~mwaskom/software/seaborn/index.html>`_;
- * `statsmodels 0.6.1 <http://statsmodels.sourceforge.net>`_;
+ * `Shapely 1.6.4 <https://github.com/Toblerity/Shapely>`_; 
+ * `seaborn 0.9 <http://stanford.edu/~mwaskom/software/seaborn/index.html>`_;
+ * `statsmodels 0.9.0 <http://statsmodels.sourceforge.net>`_;
  * `GitPython <http://gitpython.readthedocs.io>`_;
  * `GDAL/OGR <https://pypi.org/project/GDAL/>`_;
  * and `gcc`.  
 
-For parallel execution, `Pypar <http://github.com/daleroberts/pypar>`_ is required;
+For parallel execution, ` mpi4py==2.0.0 is required;
 
 Status
 ======
