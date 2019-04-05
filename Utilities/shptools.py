@@ -12,9 +12,9 @@
 
 import logging
 
-import shapefile
+from . import shapefile
 import numpy as np
-from itertools import izip
+
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -65,7 +65,7 @@ def parseData(data):
 
     fields = []
     records = []
-    for k in data.keys():
+    for k in list(data.keys()):
         t = data[k]['Type']
         l = data[k]['Length']
         if t == 0:
@@ -314,9 +314,9 @@ def shpGetField(shape_file, field_name, dtype=float):
 
         field_names = [fields[i][0] for i in range(len(fields))]
         if field_name not in field_names:
-            log.warn("No field '{0}' in the list of fieldnames" .
+            log.warning("No field '{0}' in the list of fieldnames" .
                     format(field_name))
-            log.warn("Unable to proceed with processing")
+            log.warning("Unable to proceed with processing")
             raise ValueError
 
     records = sf.records()
@@ -327,12 +327,12 @@ def shpGetField(shape_file, field_name, dtype=float):
 
     if dtype != str:
         # For non-string data, return a numpy array:
-        output = np.array([records[rec][idx] for rec in xrange(nrecords)],
+        output = np.array([records[rec][idx] for rec in range(nrecords)],
                               dtype=dtype)
 
     else:
         # Otherwise, return a list:
-        output = [records[rec][idx] for rec in xrange(nrecords)]
+        output = [records[rec][idx] for rec in range(nrecords)]
 
 
     return output
@@ -420,20 +420,20 @@ def tracks2line(tracks, outputFile, dissolve=False):
                     # into multiple parts:
                     idx = np.argmin(dlon)
                     parts = []
-                    lines = izip(track.Longitude[:idx],
+                    lines = zip(track.Longitude[:idx],
                                  track.Latitude[:idx])
 
                     parts.append(lines)
-                    lines = izip(track.Longitude[idx+1:],
+                    lines = zip(track.Longitude[idx+1:],
                                  track.Latitude[idx+1:])
 
                     parts.append(lines)
                     sf.line(parts)
                 else:
-                    lines = izip(track.Longitude, track.Latitude)
+                    lines = zip(track.Longitude, track.Latitude)
                     sf.line([lines])
             else:
-                lines = izip(track.Longitude, track.Latitude)
+                lines = zip(track.Longitude, track.Latitude)
                 sf.line([lines])
 
 

@@ -28,14 +28,14 @@
  Constraints:
 """
 
-import os, sys
+import sys
 from scipy import array, arange, pi
-import numpy
 import numpy.ma as ma
 import unittest
-import NumpyTestCase
+from tests import NumpyTestCase, pathLocate
+
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 

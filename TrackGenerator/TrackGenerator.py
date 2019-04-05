@@ -14,8 +14,8 @@ example, to run with 10 processors::
 :class:`TrackGenerator` can be correctly initialised and started by
 calling :meth:`run` with the location of a configuration file::
 
-    >>> import TrackGenerator
-    >>> TrackGenerator.run('cairns.ini')
+    # >>> import TrackGenerator
+    # >>> TrackGenerator.run('cairns.ini')
 
 Alternatively, it can be run from the command line::
 
@@ -35,18 +35,18 @@ Here's an example that shows the group structure in a track file. The
 track file contains five tracks, each with only two variables - 'time'
 and 'track'::
 
-    >>> from netCDF4 import Dataset
-    >>> rootgrp = Dataset("tracks.00001.nc", "r")
-    >>> print rootgrp.groups
-    OrderedDict([(u'tracks', <netCDF4.Group object at 0x04B92E88>)])
-    >>> def walktree(top):
-    >>>  values = top.groups.values()
-    >>>  yield values
-    >>>  for value in top.groups.values():
-    >>>   for children in walktree(value):
-    >>>    yield children
-
-    >>> print rootgrp
+    # >>> from netCDF4 import Dataset
+    # >>> rootgrp = Dataset("tracks.00001.nc", "r")
+    # >>> print rootgrp.groups
+    # OrderedDict([(u'tracks', <netCDF4.Group object at 0x04B92E88>)])
+    # >>> def walktree(top):
+    # >>>  values = top.groups.values()
+    # >>>  yield values
+    # >>>  for value in top.groups.values():
+    # >>>   for children in walktree(value):
+    # >>>    yield children
+    #
+    # >>> print rootgrp
     <type 'netCDF4.Dataset'>
     root group (NETCDF4 file format):
         created_on: 2015-09-23 14:12:20
@@ -54,10 +54,10 @@ and 'track'::
         dimensions:
         variables:
         groups: tracks
-
-    >>> for children in walktree(rootgrp):
-    >>>  for child in children:
-    >>>   print child
+    #
+    # >>> for children in walktree(rootgrp):
+    # >>>  for child in children:
+    # >>>   print child
 
     <type 'netCDF4.Group'>
     group /tracks:
@@ -102,7 +102,7 @@ The 'track' variable is a compound variable akin to a
 :class:`numpy.recarray`. Here's an example of the summary of a 'track'
 variable (taking the last track from the previous example)::
 
-    >>> print child.variables['track']
+    # >>> print child.variables['track']
     <type 'netCDF4.Variable'>
     compound track(time)
         long_name: Tropical cyclone track data
@@ -144,14 +144,14 @@ import numpy as np
 
 
 import Utilities.stats as stats
-import trackLandfall
-import trackSize
+import TrackGenerator.trackLandfall as trackLandfall
+import TrackGenerator.trackSize as trackSize
 import Utilities.nctools as nctools
 import Utilities.Cmap as Cmap
-import Utilities.Cstats as Cstats
 import Utilities.maputils as maputils
 import Utilities.metutils as metutils
 import Utilities.tcrandom as random
+import Utilities.tcrandom_randgen as random
 from netCDF4 import Dataset as netcdf_file
 from scipy.ndimage.interpolation import spline_filter
 
@@ -281,7 +281,7 @@ class TrackGenerator(object):
         self.sizeMean = sizeMean
         self.sizeStdDev = sizeStdDev
         self.timeOverflow = dt * maxTimeSteps
-        self.missingValue = sys.maxint  # FIXME: remove
+        self.missingValue = sys.maxsize  # FIXME: remove
         self.progressbar = None  # FIXME: remove
         self.allCDFInitBearing = None
         self.allCDFInitSpeed = None
@@ -519,8 +519,7 @@ class TrackGenerator(object):
             """
             :return: True if a valid pressure. False, otherwise.
             """
-            if all(np.round(track.CentralPressure, 2) <\
-                       np.round(track.EnvPressure, 2)):
+            if all(np.round(track.CentralPressure, 2) < np.round(track.EnvPressure, 2)):
                 return True
             else:
                 log.debug(("Invalid pressure values in track "
@@ -567,7 +566,7 @@ class TrackGenerator(object):
 
             # Get the initial grid cell
 
-            initCellNum = Cstats.getCellNum(genesisLon, genesisLat,
+            initCellNum = stats.getCellNum(genesisLon, genesisLat,
                                             self.gridLimit,
                                             self.gridSpace)
 
@@ -948,7 +947,7 @@ class TrackGenerator(object):
         tol = 0.0
 
         # Generate the track
-        for i in xrange(1, self.maxTimeSteps):
+        for i in range(1, self.maxTimeSteps):
 
             # Get the new latitude and longitude from bearing and
             # distance
@@ -981,7 +980,7 @@ class TrackGenerator(object):
                         speed[:i], bearing[:i], pressure[:i],
                         poci[:i], rmax[:i])
 
-            cellNum = Cstats.getCellNum(lon[i], lat[i],
+            cellNum = stats.getCellNum(lon[i], lat[i],
                                         self.gridLimit, self.gridSpace)
             onLand = self.landfall.onLand(lon[i], lat[i])
 
@@ -1643,8 +1642,7 @@ def normal(mean=0.0, stddev=1.0):
     """
     Sample from a Normal distribution.
     """
-    return PRNG.normalvariate(mean, stddev)
-
+    return PRNG.normal(mean, stddev)
 
 def uniform(a=0.0, b=1.0):
     """
@@ -1656,9 +1654,9 @@ def logistic(loc=0., scale=1.0):
     """
     Sample from a logistic distribution.
     """
-    return PRNG.logisticvariate(loc, scale)
+    return PRNG.logistic(loc, scale)
 
-def nct(df, nc, loc=0.0, scale=1.0):
+def nct(df, nc, loc=0.0, scale=1.0): #Looks like this is never called.
     """
     Sample from a non-central T distribution.
     """
@@ -1690,7 +1688,7 @@ def balanced(iterable):
     before hand. This is only some magical slicing of the iterator,
     i.e., a poor man version of scattering.
     """
-    P, p = pp.size(), pp.rank()
+    P, p = pp.COMM_WORLD.Get_size(), pp.COMM_WORLD.Get_rank()
     return itertools.islice(iterable, p, None, P)
 
 
@@ -1799,7 +1797,7 @@ def run(configFile, callback=None):
     global pp
     pp = attemptParallel()
 
-    if pp.size() > 1 and (not seasonSeed or not trackSeed):
+    if pp.COMM_WORLD.Get_size() > 1 and (not seasonSeed or not trackSeed):
         log.critical('TrackSeed and GenesisSeed are needed' +
                      ' for parallel runs!')
         sys.exit(1)
@@ -1812,7 +1810,7 @@ def run(configFile, callback=None):
 
     # Wait for configuration to be loaded by all processors
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     # Seed the numpy PRNG. We use this PRNG to sample the number of
     # tropical cyclone tracks to simulate for each season. The inbuilt
@@ -1860,7 +1858,7 @@ def run(configFile, callback=None):
 
     # Hold until all processors are ready
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     N = sims[-1].index
 
@@ -1874,8 +1872,7 @@ def run(configFile, callback=None):
             callback(sim.index, N)
 
         if sim.seed:
-            PRNG.seed(sim.seed)
-            PRNG.jumpahead(sim.jumpahead)
+            PRNG.seed(sim.seed) # TODO needs properly fixed. PRNG PCG64 stream needs initalised in advance of for loop.
             log.debug('seed %i jumpahead %i', sim.seed, sim.jumpahead)
 
         trackFile = pjoin(trackPath, sim.outfile)
@@ -1886,4 +1883,4 @@ def run(configFile, callback=None):
     log.info('Simulating tropical cyclone tracks:' +
              ' 100 percent complete')
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()

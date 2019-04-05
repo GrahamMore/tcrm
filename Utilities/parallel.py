@@ -30,7 +30,7 @@ def attemptParallel():
     try:
         # load pypar for everyone
 
-        import pypar as pp
+        from mpi4py import MPI as pp
 
     except ImportError:
 
@@ -64,7 +64,7 @@ def disableOnWorkers(f):
 
     @wraps(f)
     def wrap(*args, **kwargs):
-        if pp.size() > 1 and pp.rank() > 0:
+        if pp.COMM_WORLD.Get_size() > 1 and pp.COMM_WORLD.Get_rank() > 0:
             return
         else:
             return f(*args, **kwargs)

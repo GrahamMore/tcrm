@@ -34,7 +34,7 @@ import itertools
 import math
 import os
 import sys
-import windmodels
+from . import windmodels
 from os.path import join as pjoin
 from collections import defaultdict
 
@@ -226,8 +226,8 @@ class WindfieldAroundTrack(object):
             envPressure = np.NaN
 
         # Get the limits of the region
-        xMin = gridLimit['xMin']
-        xMax = gridLimit['xMax']
+        xMin = gridLimit['xMin'] % 360
+        xMax = gridLimit['xMax'] % 360
         yMin = gridLimit['yMin']
         yMax = gridLimit['yMax']
 
@@ -448,7 +448,7 @@ class WindfieldGenerator(object):
 
         results = (f(track, callback)[1] for track in trackiter)
 
-        gust, bearing, Vx, Vy, P, lon, lat = results.next()
+        gust, bearing, Vx, Vy, P, lon, lat = next(results)
 
         for result in results:
             gust1, bearing1, Vx1, Vy1, P1, lon1, lat1 = result
@@ -481,11 +481,11 @@ class WindfieldGenerator(object):
                                  specified locations.
         """
         if timeStepCallback:
-            results = itertools.imap(self.calculateExtremesFromTrack,
+            results = map(self.calculateExtremesFromTrack,
                                      trackiter,
                                      itertools.repeat(timeStepCallback))
         else:
-            results = itertools.imap(self.calculateExtremesFromTrack,
+            results = map(self.calculateExtremesFromTrack,
                                      trackiter)
 
         for track, result in results:
@@ -779,7 +779,7 @@ def balanced(iterable):
     only some magical slicing of the iterator, i.e., a poor man version of
     scattering.
     """
-    P, p = pp.size(), pp.rank()
+    P, p = pp.COMM_WORLD.Get_size(), pp.COMM_WORLD.Get_rank()
     return itertools.islice(iterable, p, None, P)
 
 
@@ -881,7 +881,7 @@ def run(configFile, callback=None):
 
     # Do the work
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     wfg.dumpGustsFromTrackfiles(trackfiles, windfieldPath, timestepCallback)
 
@@ -890,6 +890,6 @@ def run(configFile, callback=None):
     except NameError:
         pass
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     log.info('Completed windfield generator')

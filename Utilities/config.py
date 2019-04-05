@@ -11,8 +11,11 @@
 """
 
 import io
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from Utilities.singleton import Singleton
+from abc import ABCMeta
+from Utilities.singleton import MetaSingleton
+
 
 def parseBool(txt):
     """
@@ -234,7 +237,10 @@ filename=slp.day.ltm.nc
 
 """
 
-class _ConfigParser(RawConfigParser, Singleton):
+class FinalMeta(MetaSingleton, ABCMeta):
+    pass
+
+class _ConfigParser(RawConfigParser, Singleton, metaclass=FinalMeta):
 
     """
     A configuration file parser that extends
@@ -244,7 +250,7 @@ class _ConfigParser(RawConfigParser, Singleton):
     ignoreSubsequent = True
     def __init__(self, defaults=DEFAULTS):
         RawConfigParser.__init__(self)
-        self.readfp(io.BytesIO(defaults))
+        self.read_file(io.StringIO(DEFAULTS))
         self.readonce = False
         
     def geteval(self, section, option):
@@ -292,7 +298,7 @@ class _ConfigParser(RawConfigParser, Singleton):
                 parsed[name] = parse(value)
             except KeyError:
                 parsed[name] = value
-        return parsed.items()
+        return list(parsed.items())
 
     def set(self, section, option, value=None):
         """

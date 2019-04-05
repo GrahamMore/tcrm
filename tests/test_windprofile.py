@@ -1,15 +1,9 @@
-import os
 import sys
 import unittest
-import NumpyTestCase
-import numpy as np
 
-from wind.windmodels import *
+import wind.windmodels
+from tests import pathLocate, NumpyTestCase
 
-try:
-    import pathLocate
-except:
-    from tests import pathLocate
 
 # Add parent folder to python path
 unittest_dir = pathLocate.getUnitTestDirectory()
@@ -26,16 +20,16 @@ class TestWindProfile(NumpyTestCase.NumpyTestCase):
         self.eP_Pa = 101000.
         self.cP_Pa = 97000.
         self.beta = 1.9
-        self.R = 1000.*np.linspace(1., 200.)
+        self.R = 1000. * wind.windmodels.np.linspace(1., 200.)
 
     def testHolland(self):
         """Test radial profile returns same value for different input units"""
-        profile_hPa = HollandWindProfile(self.lat, self.lon, self.eP_hPa,
-                                         self.cP_hPa, self.rMax, self.beta)
+        profile_hPa = wind.windmodels.HollandWindProfile(self.lat, self.lon, self.eP_hPa,
+                                                         self.cP_hPa, self.rMax, self.beta)
         V_hPa = profile_hPa.velocity(self.R)
 
-        profile_Pa = HollandWindProfile(self.lat, self.lon, self.eP_Pa,
-                                         self.cP_Pa, self.rMax, self.beta)
+        profile_Pa = wind.windmodels.HollandWindProfile(self.lat, self.lon, self.eP_Pa,
+                                                        self.cP_Pa, self.rMax, self.beta)
         V_Pa = profile_Pa.velocity(self.R)
 
         self.numpyAssertAlmostEqual(V_hPa, V_Pa, prec=1.0000000000000001e-004)

@@ -24,35 +24,41 @@ from datetime import datetime
 
 from Utilities.metutils import convert
 
-from timeseries import TimeSeriesFigure, saveFigure
+from PlotInterface.timeseries import TimeSeriesFigure, saveFigure
 
 DATEFORMAT = "%Y-%m-%d %H:%M"
 INPUT_COLS = ('Station', 'Time', 'Longitude', 'Latitude',
               'Speed', 'UU', 'VV', 'Bearing',
               'Pressure')
 
-INPUT_FMTS = ('|S16', 'object', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8')
+INPUT_FMTS = [
+    np.dtype('|S16', 'U12'), object, np.dtype('f8', 'U12'), np.dtype('f8', 'U12'),
+    np.dtype('f8', 'U12'), np.dtype('f8', 'U12'), np.dtype('f8', 'U12'),
+    np.dtype('f8', 'U12'), np.dtype('f8', 'U12')]
 INPUT_TITLES = ("Station", "Time", "Longitude", "Latitude", "Wind speed",
                 "Eastward wind", "Northward wind", "Wind direction",
                 "Sea level pressure")
 INPUT_UNIT = ('', '%Y-%m-%d %H:%M', 'degrees', 'degrees', 'm/s',
-                'm/s', 'm/s','degrees', 'Pa')
+              'm/s', 'm/s', 'degrees', 'Pa')
 INPUT_CNVT = {
-    1: lambda s: datetime.strptime(s.strip(), INPUT_UNIT[1]),
+    0: lambda s: s.replace("b","").replace("\'",""),
+    1: lambda s: datetime.strptime(s.replace("b","").replace("\'","").strip(), INPUT_UNIT[1]),
     8: lambda s: convert(float(s.strip() or 0), INPUT_UNIT[8], 'hPa')
-    }
+}
+
 
 def loadTimeseriesData(datafile):
     logging.debug("Loading timeseries data from {0}".format(datafile))
     try:
         return np.genfromtxt(datafile, dtype=INPUT_FMTS, names=INPUT_COLS,
                              comments='#', delimiter=',', skip_header=1,
-                             converters=INPUT_CNVT)
+                             converters=INPUT_CNVT, encoding='latin')
     except ValueError:
-        logging.warn("Timeseries data file is empty - returning empty array")
+        logging.warning("Timeseries data file is empty - returning empty array")
         return np.empty(0, dtype={
-                        'names': INPUT_COLS,
-                        'formats': INPUT_FMTS})
+            'names': INPUT_COLS,
+            'formats': INPUT_FMTS})
+
 
 def plotTimeseries(inputPath, outputPath, locID=None):
     """
@@ -75,7 +81,7 @@ def plotTimeseries(inputPath, outputPath, locID=None):
         inputData = loadTimeseriesData(inputFile)
 
         stnInfo = {'ID': locID, 'lon': inputData['Longitude'][0],
-                    'lat': inputData['Latitude'][0]}
+                   'lat': inputData['Latitude'][0]}
         title = 'Station ID: %s (%6.2f, %6.2f)' % (locID,
                                                    inputData['Longitude'][0],
                                                    inputData['Latitude'][0])
@@ -100,13 +106,11 @@ def plotTimeseries(inputPath, outputPath, locID=None):
             outputFile = pjoin(outputPath, '%s.png' % f.rstrip('.csv'))
             inputData = loadTimeseriesData(pjoin(inputPath, f))
 
-
-            stnInfo = {'ID':locID, 'lon':inputData['Longitude'][0],
-                        'lat':inputData['Latitude'][0]}
+            stnInfo = {'ID': locID, 'lon': inputData['Longitude'][0],
+                       'lat': inputData['Latitude'][0]}
             title = 'Station ID: %s (%6.2f, %6.2f)' % (locID,
                                                        inputData['Longitude'][0],
                                                        inputData['Latitude'][0])
-
 
             fig = TimeSeriesFigure()
 

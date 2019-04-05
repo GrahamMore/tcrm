@@ -103,8 +103,8 @@ class PressureDistribution(object):
                                          'yearspersimulation')
         cellnumber = 0
         self.gridCells = []
-        for k in xrange(len(self.lon_range) - 1):
-            for l in xrange(len(self.lat_range) - 1):
+        for k in range(len(self.lon_range) - 1):
+            for l in range(len(self.lat_range) - 1):
                 ymin = self.lat_range[l]
                 ymax = self.lat_range[l] + gridSpace['y']
                 xmin = self.lon_range[k]
@@ -139,7 +139,7 @@ class PressureDistribution(object):
                                (t.Longitude < cell.xmax)))[0]
                 if len(ii) > 0:
                     vv = t.CentralPressure[ii].\
-                         compress(t.CentralPressure[ii] < sys.maxint)
+                         compress(t.CentralPressure[ii] < sys.maxsize)
                     vcell = np.append(vcell, vv.compress(vv > 0.0))
 
             if len(vcell > 0):
@@ -255,18 +255,18 @@ class PressureDistribution(object):
         bins = np.arange(850., 1020., 5.)
         synMinCPDist = np.empty((len(trackfiles), len(bins) - 1))
         self.synMinCP = np.array([])
-        if (pp.rank() == 0) and (pp.size() > 1):
+        if (pp.COMM_WORLD.Get_rank() == 0) and (pp.COMM_WORLD.Get_size() > 1):
 
             w = 0
             n = 0
-            for d in range(1, pp.size()):
+            for d in range(1, pp.COMM_WORLD.Get_size()):
                 pp.send(trackfiles[w], destination=d, tag=work_tag)
                 log.debug("Processing track file {0:d} of {1:d}".
                           format(w + 1, len(trackfiles)))
                 w += 1
 
             terminated = 0
-            while terminated < pp.size() - 1:
+            while terminated < pp.COMM_WORLD.Get_size() - 1:
                 results, status = pp.receive(pp.any_source, tag=result_tag,
                                              return_status=True)
 
@@ -292,7 +292,7 @@ class PressureDistribution(object):
 
             self.calculateMeans(synMean, synMin, synMed, synMax, synMinCPDist)
 
-        elif (pp.size() > 1) and (pp.rank() != 0):
+        elif (pp.COMM_WORLD.Get_size() > 1) and (pp.COMM_WORLD.Get_rank() != 0):
             while True:
                 trackfile = pp.receive(source=0, tag=work_tag)
                 if trackfile is None:
@@ -305,7 +305,7 @@ class PressureDistribution(object):
                 results = (sMean, sMin, sMax, sMed, sMinCPDist, sMinCP)
                 pp.send(results, destination=0, tag=result_tag)
 
-        elif pp.size() == 1 and pp.rank() == 0:
+        elif pp.COMM_WORLD.Get_size() == 1 and pp.COMM_WORLD.Get_rank() == 0:
             # Assumed no Pypar - helps avoid the need to extend DummyPypar()
             for n, trackfile in enumerate(sorted(trackfiles)):
                 tracks = loadTracks(trackfile)
@@ -567,11 +567,11 @@ class PressureDistribution(object):
 
         self.historic()
 
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
 
         self.synthetic()
 
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
 
         self.plotPressureMean()
         self.plotPressureMin()

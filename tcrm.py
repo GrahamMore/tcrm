@@ -12,6 +12,7 @@
 """
 # This package needs patching to run on python 2.6
 import logging as log
+from functools import reduce
 
 if 'NullHandler' not in dir(log):
     from Utilities import py26compat
@@ -22,15 +23,17 @@ import traceback
 import argparse
 import time
 import sys
-import imp
+import importlib
 import os
+import mpi4py
 
 from os.path import join as pjoin, realpath, isdir, dirname
 from functools import wraps
 from Utilities.progressbar import SimpleProgressBar as ProgressBar
 from Utilities.files import flStartLog, flLoadFile
 from Utilities.config import ConfigParser
-from Utilities.parallel import attemptParallel, disableOnWorkers
+from Utilities.parallel import attemptParallel,disableOnWorkers
+
 from Utilities.version import version
 from Utilities import pathLocator
 
@@ -43,6 +46,10 @@ if pathLocator.is_frozen():
         pathLocator.getRootDirectory(), 'mpl-data', 'data')
 
 compiledModules = ['KPDF', 'akima', 'Cmap', 'Cstats']
+
+global pp
+from mpi4py import MPI as pp
+test = attemptParallel()
 
 def checkModules(moduleList):
     """
@@ -61,8 +68,7 @@ def checkModules(moduleList):
         raise TypeError
     for m in moduleList:
         try:
-            imp.find_module(m)
-            found = True
+            found = importlib.util.find_spec(m) is not None
         except ImportError:
             found = False
         if found:
@@ -90,7 +96,7 @@ def timer(f):
           reduce(lambda ll, b : divmod(ll[0], b) + ll[1:],
                         [(tottime,), 60, 60])
 
-        log.info("Time for {0}: {1}".format(f.func_name, msg) )
+        log.info("Time for {0}: {1}".format(f.__name__, msg) )
         return res
 
     return wrap
@@ -533,56 +539,56 @@ def main(configFile='main.ini'):
     config = ConfigParser()
     config.read(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'DownloadData'):
         doDataDownload(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'DataProcess'):
         doDataProcessing(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'ExecuteStat'):
         doStatistics(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'ExecuteTrackGenerator'):
         doTrackGeneration(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'ExecuteWindfield'):
         doWindfieldCalculations(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'ExecuteHazard'):
         doHazard(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'PlotData'):
         doDataPlotting(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'CreateDatabase'):
         doDatabaseUpdate(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
     if config.getboolean('Actions', 'ExecuteEvaluate'):
         doEvaluation(config)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     if config.getboolean('Actions', 'PlotHazard'):
         doHazardPlotting(configFile)
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     log.info('Completed TCRM')
 
@@ -638,10 +644,10 @@ def startup():
     global pp
     pp = attemptParallel()
     import atexit
-    atexit.register(pp.finalize)
+    atexit.register(pp.Finalize)
 
-    if pp.size() > 1 and pp.rank() > 0:
-        logfile += '-' + str(pp.rank())
+    if pp.COMM_WORLD.Get_size() > 1 and pp.COMM_WORLD.Get_rank() > 0:
+        logfile += '-' + str(pp.COMM_WORLD.Get_rank())
         verbose = False  # to stop output to console
     else:
         pass
@@ -659,9 +665,9 @@ def startup():
                             module="matplotlib")
 
     warnings.filterwarnings("ignore", category=RuntimeWarning)
-    rc = checkModules(compiledModules)
-    if not rc:
-        sys.exit(1)
+    # rc = checkModules(compiledModules)
+    # if not rc:
+    #     sys.exit(1)
 
     if debug:
         main(configFile)

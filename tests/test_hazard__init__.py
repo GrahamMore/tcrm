@@ -10,8 +10,8 @@ Testing the hazard module __init__ functions
 import os
 import sys
 import unittest
-import cPickle
-import NumpyTestCase
+import pickle
+from tests import NumpyTestCase
 import numpy
 
 # Add parent folder to python path
@@ -33,17 +33,17 @@ class TestloadFile(NumpyTestCase.NumpyTestCase):
              [ 19.33638191,  19.37392426,  19.41156006,  19.44928551, 19.48709679],
              [ 19.33782578,  19.37572098,  19.41371346,  19.45179558, 19.48996544]],
             dtype='float32')
-        pfile = open(os.path.join(unittest_dir, 'test_data', 'testDomain.pck'),'r')
-        self.wf_lat = cPickle.load(pfile)
-        self.wf_lon = cPickle.load(pfile)
-        pfile.close()
+        pkl_file = open(os.path.join(unittest_dir, 'test_data', 'testDomain.pck'),'rb')
+        self.wf_lat = pickle.load(pkl_file,encoding='latin')
+        self.wf_lon = pickle.load(pkl_file,encoding='latin')
+        pkl_file.close()
 
     def testloadFile(self):
         """ test the loadFile function """
         limits = (500, 505, 500, 505)
         data_subset = loadFile(self.filename, limits)
-        self.numpyAssertAlmostEqual(data_subset, self.expectedsubset)
 
+        self.numpyAssertAlmostEqual(data_subset, self.expectedsubset)
         badfilename = self.filename + '1'
         assert_raises(IOError, loadFile, badfilename, limits)
 

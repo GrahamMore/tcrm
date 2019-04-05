@@ -44,8 +44,8 @@ def rmax(dp, lat, eps, coeffs=[3.5843946536979779,-0.0045486143609339436,
 
     """
     if len(coeffs) < 4:
-        LOG.warn("Insufficient coefficients for rmw calculation!")
-        LOG.warn("Using default values")
+        LOG.warning("Insufficient coefficients for rmw calculation!")
+        LOG.warning("Using default values")
         coeffs = [3.5843946536979779,-0.0045486143609339436,
                   0.78621467400844858, 0.0024030344245284741,
                   0.0015567629057007433]

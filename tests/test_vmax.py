@@ -34,13 +34,13 @@
 
  $Id: TestVMax.py 563 2007-10-24 02:52:40Z carthur $
 """
-import os, sys
+import sys
 from scipy import arange
 import unittest
 try:
-    import pathLocate
+    from tests import pathLocate
 except:
-    from unittests import pathLocate
+    from unittest import pathLocate
 
 # Add parent folder to python path
 unittest_dir = pathLocate.getUnitTestDirectory()
@@ -62,15 +62,15 @@ class TestVMax(unittest.TestCase):
         """Testing vMax"""
 
         #testing willoughby
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.vmax(self.pc[i], self.pe, "willoughby"), self.vmax["will"][i], 3)
 
         #testing holland
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.vmax(self.pc[i], self.pe, "holland"), self.vmax["holl"][i], 3)
 
         #testing atkinson
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.vmax(self.pc[i], self.pe, "atkinson"), self.vmax["atkin"][i], 3)
 
         #testing exceptions
@@ -82,15 +82,15 @@ class TestVMax(unittest.TestCase):
         """Testing pDiff"""
 
         #testing willoughby
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.pDiff(self.vmax["will"][i], self.pe, "willoughby"), self.pc[i], 3)
 
         #testing holland
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.pDiff(self.vmax["holl"][i], self.pe, "holland"), self.pc[i], 3)
 
         #testing atkinson
-        for i in xrange(self.pc.size):
+        for i in range(self.pc.size):
             self.assertAlmostEqual(vmax.pDiff(self.vmax["atkin"][i], self.pe, "atkinson"), self.pc[i], 3)
 
         #testing exceptions

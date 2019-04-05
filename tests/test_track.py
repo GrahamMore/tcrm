@@ -4,17 +4,13 @@
 
 """
 
-import os
 import sys
 from os.path import join as pjoin
 import unittest
-import NumpyTestCase
-import numpy as np
-from netCDF4 import Dataset, date2num, num2date
-from datetime import datetime, timedelta
+from tests import NumpyTestCase, pathLocate
 
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 

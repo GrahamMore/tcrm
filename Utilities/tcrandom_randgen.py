@@ -14,12 +14,14 @@
 
 """
 import random
+import randomgen
+from randomgen import RandomGenerator,PCG64,MT19937
 import math
 from scipy.special import nctdtrit, ndtri
 
 #pylint: disable-msg=R0904
 
-class Random(random.Random):
+class Random(RandomGenerator):
     """
     An extension of the standard :mod:`random` library to
     allow sampling from additional distributions.
@@ -27,7 +29,9 @@ class Random(random.Random):
     """
 
     def __init__(self, value=None):
-        super().__init__(value)
+        RNG = PCG64(value)
+        super().__init__(RNG)
+
 
     def cauchyvariate(self, mu, sigma):
         """
@@ -39,7 +43,7 @@ class Random(random.Random):
         :returns: A random variate from the Cauchy distribution.
 
         """
-        u1 = self.random()
+        u1 = self.rand()#provides the number from the random gen.
         if sigma <= 0.0:
             raise ValueError("Invalid input parameter: `sigma` must be positive")
         return mu + sigma * math.tan(math.pi * (u1 - 0.5))
@@ -60,7 +64,7 @@ class Random(random.Random):
         if sigma <= 0.0:
             raise ValueError("Invalid input parameter: `sigma` must be positive")
 
-        u1 = self.random()
+        u1 = self.rand()
         return mu + sigma * nctdtrit(df, nc, u1)
 
     def lognormvariate(self, xi, mu=0.0, sigma=1.0):
@@ -78,5 +82,5 @@ class Random(random.Random):
         if sigma <= 0.0:
             raise ValueError("Invalid input parameter: `sigma` must be positive")
 
-        u1 = self.random()
+        u1 = self.rand()
         return mu + sigma * math.exp(xi * ndtri(u1))

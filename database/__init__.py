@@ -54,6 +54,7 @@ from Utilities.track import loadTracksFromFiles
 from Utilities.singleton import Singleton
 from Utilities.parallel import attemptParallel, disableOnWorkers
 from Utilities.process import pAlreadyProcessed, pGetProcessedFiles
+from functools import reduce
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
@@ -72,7 +73,7 @@ def timer(func):
         msg = "%02d:%02d:%02d " % \
             reduce(lambda ll, b: divmod(ll[0], b) + ll[1:],
                    [(tottime,), 60, 60])
-        log.debug("Time for {0}: {1}".format(func.func_name, msg))
+        log.debug("Time for {0}: {1}".format(func.__name__, msg))
         return res
 
     return wrap
@@ -413,11 +414,11 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
 
         work_tag = 0
         result_tag = 1
-        if (pp.rank() == 0) and (pp.size() > 1):
+        if (pp.COMM_WORLD.Get_rank() == 0) and (pp.COMM_WORLD.Get_size() > 1):
             locations = self.getLocations()
             w = 0
-            p = pp.size() - 1
-            for d in range(1, pp.size()):
+            p = pp.COMM_WORLD.Get_size() - 1
+            for d in range(1, pp.COMM_WORLD.Get_size()):
                 if w < len(fileList):
                     pp.send((fileList[w], locations, w),
                             destination=d, tag=work_tag)
@@ -451,19 +452,19 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
                     pp.send(None, destination=d, tag=work_tag)
                     terminated += 1
 
-        elif (pp.size() > 1) and (pp.rank() != 0):
+        elif (pp.COMM_WORLD.Get_size() > 1) and (pp.COMM_WORLD.Get_rank() != 0):
             while True:
                 work_pack = pp.receive(source=0, tag=work_tag)
                 if work_pack is None:
                     break
 
                 log.info("Processing {0} on node {1}".\
-                         format(work_pack[0], pp.rank()))
+                         format(work_pack[0], pp.COMM_WORLD.Get_rank()))
                 results = self.processEvent(*work_pack)
-                log.debug("Results received on node {0}".format(pp.rank()))
+                log.debug("Results received on node {0}".format(pp.COMM_WORLD.Get_rank()))
                 pp.send(results, destination=0, tag=result_tag)
 
-        elif pp.size() == 1 and pp.rank() == 0:
+        elif pp.COMM_WORLD.Get_size() == 1 and pp.COMM_WORLD.Get_rank() == 0:
             # Assume no Pypar:
             locations = self.getLocations()
             for eventNum, filename in enumerate(fileList):
@@ -509,7 +510,7 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
         try:
             ncobj = Dataset(pjoin(self.windfieldPath, filename))
         except:
-            log.warn("Cannot open {0}".\
+            log.warning("Cannot open {0}".\
                      format(pjoin(self.windfieldPath, filename)))
 
         # First perform the event update for tblEvents:
@@ -567,7 +568,7 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
         dtHazardFile = datetime.fromtimestamp(int(si.st_mtime))
         lon = ncobj.variables['lon'][:]
         lat = ncobj.variables['lat'][:]
-        years = ncobj.variables['years'][:]
+        years = ncobj.variables['year'][:]
 
         wspd = ncobj.variables['wspd'][:]
         wspdUpper = ncobj.variables['wspdupper'][:]
@@ -627,10 +628,10 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
         work_tag = 0
         result_tag = 1
 
-        if (pp.rank() == 0) and (pp.size() > 1):
+        if (pp.COMM_WORLD.Get_rank() == 0) and (pp.COMM_WORLD.Get_size() > 1):
             w = 0
-            p = pp.size() - 1
-            for d in range(1, pp.size()):
+            p = pp.COMM_WORLD.Get_size() - 1
+            for d in range(1, pp.COMM_WORLD.Get_size()):
                 if w < len(trackfiles):
                     pp.send((trackfiles[w], locations),
                             destination=d, tag=work_tag)
@@ -649,7 +650,7 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
                     result, status = pp.receive(pp.any_source, tag=result_tag,
                                                 return_status=True)
                 except:
-                    log.warn("Problems recieving results on node 0")
+                    log.warning("Problems recieving results on node 0")
 
                 if result:
                     log.debug("Inserting results into tblTracks")
@@ -666,17 +667,17 @@ class _HazardDatabase(sqlite3.Connection, Singleton):
                     pp.send(None, destination=d, tag=work_tag)
                     terminated += 1
 
-        elif (pp.size() > 1) and (pp.rank() != 0):
+        elif (pp.COMM_WORLD.Get_size() > 1) and (pp.COMM_WORLD.Get_rank() != 0):
             while True:
                 work_pack = pp.receive(source=0, tag=work_tag)
-                log.info("Received track on node {0}".format(pp.rank()))
+                log.info("Received track on node {0}".format(pp.COMM_WORLD.Get_rank()))
                 if work_pack is None:
                     break
 
                 results = processTrack(*work_pack)
                 pp.send(results, destination=0, tag=result_tag)
 
-        elif pp.size() == 1 and pp.rank() == 0:
+        elif pp.COMM_WORLD.Get_size() == 1 and pp.COMM_WORLD.Get_rank() == 0:
             # No Pypar
             for w, trackfile in enumerate(trackfiles):
                 log.info("Processing trackfile {0:d} of {1:d}".\
@@ -760,18 +761,18 @@ def run(configFile):
     db.createDatabase()
     db.setLocations()
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
     db.processEvents()
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     db.processHazard()
 
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
     db.processTracks()
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
 
     #db.close()
-    pp.barrier()
+    pp.COMM_WORLD.barrier()
     log.info("Created and populated database")
     log.info("Finished running database creation")
 
@@ -822,7 +823,7 @@ def buildLocationDatabase(location_db, location_file, location_type='AWS'):
     # Perform a check that locations are in geographic coordinates:
     lons = []
     lats = []
-    for v in vertices.values():
+    for v in list(vertices.values()):
         lon, lat = v[0]
         lons.append(lon)
         lats.append(lat)
@@ -839,7 +840,7 @@ def buildLocationDatabase(location_db, location_file, location_type='AWS'):
         raise ValueError(msg)
 
     # Prepare entries:
-    for v, r in zip(vertices.values(), records):
+    for v, r in zip(list(vertices.values()), records):
         locLon, locLat = v[0]
         locLon = np.mod(locLon, 360.)
         locCode = str(r[0])

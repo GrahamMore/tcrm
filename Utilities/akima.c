@@ -463,7 +463,7 @@ static struct PyModuleDef moduledef = {
 #define INITERROR return NULL
 
 PyMODINIT_FUNC
-PyInit__akima(void)
+PyInit_akima(void)
 
 #else
 
@@ -478,37 +478,10 @@ init_akima(void)
 
     char *doc = (char *)PyMem_Malloc(sizeof(module_doc) + sizeof(_VERSION_));
     sprintf(doc, module_doc, _VERSION_);
-
-#if PY_MAJOR_VERSION >= 3
     moduledef.m_doc = doc;
     module = PyModule_Create(&moduledef);
-#else
-    module = Py_InitModule3("_akima", module_methods, doc);
-#endif
-
-    PyMem_Free(doc);
-
-    if (module == NULL)
-        INITERROR;
-
-    if (_import_array() < 0) {
-        Py_DECREF(module);
-        INITERROR;
-    }
-
-    {
-#if PY_MAJOR_VERSION < 3
-    PyObject *s = PyString_FromString(_VERSION_);
-#else
     PyObject *s = PyUnicode_FromString(_VERSION_);
-#endif
-    PyObject *dict = PyModule_GetDict(module);
-    PyDict_SetItemString(dict, "__version__", s);
-    Py_DECREF(s);
-    }
-
-#if PY_MAJOR_VERSION >= 3
     return module;
-#endif
+
 }
 

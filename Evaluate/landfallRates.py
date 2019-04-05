@@ -18,7 +18,7 @@ import numpy as np
 
 from os.path import join as pjoin
 from scipy.stats import scoreatpercentile as percentile
-from ConfigParser import NoOptionError
+from configparser import NoOptionError
 
 from Utilities.config import ConfigParser
 from Utilities.track import ncReadTrackData
@@ -208,18 +208,18 @@ class LandfallRates(object):
 
         self.setOutput(len(trackfiles))
 
-        if (pp.rank() == 0) and (pp.size() > 1):
+        if (pp.COMM_WORLD.Get_rank() == 0) and (pp.COMM_WORLD.Get_size() > 1):
 
             w = 0
             n = 0
-            for d in range(1, pp.size()):
+            for d in range(1, pp.COMM_WORLD.Get_size()):
                 pp.send(trackfiles[w], destination=d, tag=work_tag)
                 LOG.debug("Processing track file {0:d} of {1:d}".\
                           format(w + 1, len(trackfiles)))
                 w += 1
 
             terminated = 0
-            while terminated < pp.size() - 1:
+            while terminated < pp.COMM_WORLD.Get_size() - 1:
                 results, status = pp.receive(pp.any_source, tag=result_tag,
                                              return_status=True)
 
@@ -239,7 +239,7 @@ class LandfallRates(object):
 
             self.calculateStats()
 
-        elif (pp.size() > 1) and (pp.rank() != 0):
+        elif (pp.COMM_WORLD.Get_size() > 1) and (pp.COMM_WORLD.Get_rank() != 0):
             while True:
                 trackfile = pp.receive(source=0, tag=work_tag)
                 if trackfile is None:
@@ -250,7 +250,7 @@ class LandfallRates(object):
                 results = self.processTracks(tracks)
                 pp.send(results, destination=0, tag=result_tag)
 
-        elif pp.size() == 1 and pp.rank() == 0:
+        elif pp.COMM_WORLD.Get_size() == 1 and pp.COMM_WORLD.Get_rank() == 0:
             # Assumed no Pypar - helps avoid the need to extend DummyPypar()
             for n, trackfile in enumerate(sorted(trackfiles)):
                 LOG.debug("Processing track file {0:d} of {1:d}".\
@@ -294,8 +294,8 @@ class LandfallRates(object):
         pp = attemptParallel()
 
         self.historic()
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
         self.synthetic()
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
         self.plot()
         #self.save()

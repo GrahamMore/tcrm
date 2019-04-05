@@ -26,12 +26,13 @@ Description: Unit test for utils/met.py
 TODO: Update to test all functions in :mod:`metutils`
 
 """
-import os, sys
+import sys
 import unittest
 from numpy import array, arange, pi
-import NumpyTestCase
+from tests import NumpyTestCase, pathLocate
+
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 
@@ -39,7 +40,7 @@ except:
 unittest_dir = pathLocate.getUnitTestDirectory()
 sys.path.append(pathLocate.getRootDirectory())
 from Utilities import metutils
-from Utilities.files import flStartLog
+
 
 class TestConvert(NumpyTestCase.NumpyTestCase):
     lat = array(arange(0,-21,-1, 'd'))

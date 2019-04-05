@@ -65,6 +65,8 @@
 
     (Windows)
     gcc -c KPDF.c -I"C:\Python25" -o KPDF.o -Wall -O -fPIC -std=c99
+    or
+    gcc -c KPDF.c -I"C:\Anaconda3\envs\analysis_general\include" -I"C:\Anaconda3\envs\analysis_general\Lib\site-packa\Anaconda3\envs\analysis_general" -l python3.6 -o KPDF.o -Wall -O -fPIC -std=c99
     gcc -shared KPDF.o -L"C:\Python25\libs" -l Python25 -o KPDF.pyd
 
     (Unix)
@@ -77,7 +79,7 @@
 
 #include "Python.h"
 /* #include "numpy/arrayobject.h" */
-#include "arrayobject.h" 
+#include "arrayobject.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -104,15 +106,12 @@ static PyObject *UPDFBiweight( PyObject *self , PyObject *args );
 static PyObject *UPDFTriangular( PyObject *self , PyObject *args );
 static PyObject *UPDFGaussian( PyObject *self , PyObject *args );
 static PyObject *UPDFOptimumBandwidth( PyObject *self , PyObject *args );
-
 static PyObject *MPDFEpanechnikov( PyObject *self , PyObject *args );
 static PyObject *MPDFGaussian( PyObject *self , PyObject *args );
 static PyObject *MPDFOptimumBandwidth( PyObject *self, PyObject *args );
-
 static PyObject *MPDF2DGrid2Array( PyObject *self, PyObject *args );
 static PyObject *MPDF3DGrid2Array( PyObject *self, PyObject *args );
 /*static PyObject *set_callback( PyObject *self, PyObject *args );*/
-
 /* Declare this function because it is accessed before it is defined */
 static PyObject *MPDFGrid2Array( PyArrayObject **numpys, int fastest );
 
@@ -134,7 +133,7 @@ set_callback(dummy, arg)
 /***
 Initialize the module and allow access from Python to some functions
  **/
-static PyMethodDef KPDFMethods[]={
+static struct PyMethodDef KPDFMethods[]={
   {"UPDFEpanechnikov",UPDFEpanechnikov,METH_VARARGS},
   {"UPDFBiweight",UPDFBiweight,METH_VARARGS},
   {"UPDFTriangular",UPDFTriangular,METH_VARARGS},
@@ -148,19 +147,6 @@ static PyMethodDef KPDFMethods[]={
   {"set_callback",set_callback},
   {NULL,NULL} /* Last entry */
 };
-
-void initKPDF( void )
-{
-  PyObject *m, *d;
-
-  /* Initialize the Python Module */
-  m=Py_InitModule("KPDF",KPDFMethods);
-  /* Give access to Numeric Arrays */
-  import_array();
-  /* Intialize the dictionary */
-  d=PyModule_GetDict(m);
-  initKPDFconstants();
-}
 
 /*****
 Initialize some internal constants for all the kernels.
@@ -937,3 +923,19 @@ static PyObject *MPDFGrid2Array( PyArrayObject **numpys , int fastest )
   return (PyObject*)PyArray_Return(retarray);
 }
 
+
+static struct PyModuleDef KPDFmodule = {
+    PyModuleDef_HEAD_INIT,
+    "KPDF",   /* name of module */
+    NULL, /* module documentation, may be NULL */
+    -1,       /* size of per-interpreter state of the module,
+                 or -1 if the module keeps state in global variables. */
+    KPDFMethods
+};
+
+PyMODINIT_FUNC
+PyInit_KPDF(void){
+  import_array();
+  initKPDFconstants();
+  return PyModule_Create(&KPDFmodule);
+}

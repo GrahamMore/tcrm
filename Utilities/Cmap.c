@@ -29,14 +29,10 @@ Constraints:
 
 To compile:
 
-    (Windows)
-	gcc -c Cmap.c -I"C:\Python25" -o Cmap.o -Wall -O
-	gcc -shared Cmap.o -L"C:\Python25\libs" -l Python25 -o Cmap.pyd
+    (Windows) Adapted for GM
+    gcc  -c Cmap.c    -IC:\Anaconda3\envs\analysis_general\include -o Cmap.o -Wall -O
+    gcc -shared -LC:\Anaconda3\envs\analysis_general\libs  -o Cmap.pyd Cmap.o -lpython36
     
-    (Unix)
-    gcc -c Cmap.c -I/usr/local/include/python2.5 -I/usr/local/lib/python2.5 -o Cmap.o -Wall -O -fPIC
-    gcc -shared Cmap.o -o Cmap.so
-
 Version: $Rev: 512 $
 
 $Id: Cmap.c 512 2011-10-31 07:20:38Z nsummons $
@@ -74,7 +70,8 @@ int _bear2LatLon(double bearing, double distance, double oLon, double oLat, doub
 	return 0;
 }
 
-PyObject* bear2LatLon(PyObject* self, PyObject* args)
+static PyObject*
+bear2LatLon(PyObject *self, PyObject *args)
 {
 	double bearing;
 	double distance;
@@ -97,7 +94,6 @@ PyObject* bear2LatLon(PyObject* self, PyObject* args)
 	return Py_BuildValue("(dd)", nLon, nLat);
 }
 
-
 // Method table for python module
 static struct PyMethodDef MethodTable[] =
 {
@@ -109,8 +105,19 @@ static struct PyMethodDef MethodTable[] =
 		{NULL, NULL, 0, NULL}   /* sentinel */
 };
 
+static struct PyModuleDef Cmapmodule = {
+    PyModuleDef_HEAD_INIT,
+    "Cmap",   /* name of module */
+    NULL, /* module documentation, may be NULL */
+    -1,       /* size of per-interpreter state of the module,
+                 or -1 if the module keeps state in global variables. */
+    MethodTable
+};
+
 // Module initialisation
-void initCmap(void)
+
+PyMODINIT_FUNC
+PyInit_Cmap(void)
 {
-		Py_InitModule("Cmap", MethodTable);
+		return PyModule_Create(&Cmapmodule);
 }

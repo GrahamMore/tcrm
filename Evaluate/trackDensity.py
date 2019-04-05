@@ -166,17 +166,17 @@ class TrackDensity(object):
         work_tag = 0
         result_tag = 1
 
-        if (pp.rank() == 0) and (pp.size() > 1):
+        if (pp.COMM_WORLD.Get_rank() == 0) and (pp.COMM_WORLD.Get_size() > 1):
             w = 0
             n = 0
-            for d in range(1, pp.size()):
+            for d in range(1, pp.COMM_WORLD.Get_size()):
                 pp.send(trackfiles[w], destination=d, tag=work_tag)
                 log.debug("Processing track file {0:d} of {1:d}".\
                               format(w, len(trackfiles)))
                 w += 1
 
             terminated = 0
-            while (terminated < pp.size() - 1):
+            while (terminated < pp.COMM_WORLD.Get_size() - 1):
                 results, status = pp.receive(pp.any_source, tag=result_tag,
                                              return_status=True)
                 self.synHist[n, :, :] = results
@@ -194,7 +194,7 @@ class TrackDensity(object):
 
             self.calculateMeans()
 
-        elif (pp.size() > 1) and (pp.rank() != 0):
+        elif (pp.COMM_WORLD.Get_size() > 1) and (pp.COMM_WORLD.Get_rank() != 0):
             while(True):
                 trackfile = pp.receive(source=0, tag=work_tag)
                 if trackfile is None:
@@ -205,7 +205,7 @@ class TrackDensity(object):
                 results = self.calculate(tracks) / self.synNumYears
                 pp.send(results, destination=0, tag=result_tag)
 
-        elif (pp.size() == 1) and (pp.rank() == 0):
+        elif (pp.COMM_WORLD.Get_size() == 1) and (pp.COMM_WORLD.Get_rank() == 0):
             for n, trackfile in enumerate(trackfiles):
                 tracks = loadTracks(trackfile)
                 self.synHist[n, :, :] = self.calculate(tracks) / \
@@ -363,11 +363,11 @@ class TrackDensity(object):
 
         self.historic()
 
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
 
         self.synthetic()
 
-        pp.barrier()
+        pp.COMM_WORLD.barrier()
 
         self.plotTrackDensity()
         self.plotTrackDensityPercentiles()

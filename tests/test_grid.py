@@ -25,13 +25,13 @@
 
  $Id: test_grid.py 810 2012-02-21 07:52:50Z nsummons $
 """
-import os, sys, pdb
+import os, sys
 import unittest
-import cPickle
-import NumpyTestCase
+import pickle
+from tests import NumpyTestCase, pathLocate
 import numpy
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 
@@ -39,7 +39,6 @@ except:
 unittest_dir = pathLocate.getUnitTestDirectory()
 sys.path.append(pathLocate.getRootDirectory())
 from Utilities import grid
-from Utilities.files import flStartLog
 
 
 class TestGrid(NumpyTestCase.NumpyTestCase):
@@ -64,11 +63,11 @@ class TestGrid(NumpyTestCase.NumpyTestCase):
 
     def test_grdRead(self):
         """Test grid data is read correctly from ascii file"""
-        pfile = open(os.path.join(unittest_dir, 'test_data', 'gridReadTestData.pck'),'r')
-        pdata = cPickle.load(pfile)
-        plon = cPickle.load(pfile)
-        plat = cPickle.load(pfile)
-        pfile.close()
+        pkl_file = open(os.path.join(unittest_dir, 'test_data', 'gridReadTestData.pck'),'rb')
+        pdata = pickle.load(pkl_file,encoding='latin1')
+        plon = pickle.load(pkl_file,encoding='latin1')
+        plat = pickle.load(pkl_file,encoding='latin1')
+        pkl_file.close()
         lon, lat, data = grid.grdRead(self.gridfile)
         self.numpyAssertAlmostEqual(pdata, data)
 
@@ -81,9 +80,9 @@ class TestGrid(NumpyTestCase.NumpyTestCase):
 
     def test_SampleGrid(self):
         """Test SampleGrid class using an ascii file as input"""
-        pfile = open(os.path.join(unittest_dir, 'test_data', 'samplegrid.pck'),'r')
+        pkl_file = open(os.path.join(unittest_dir, 'test_data', 'samplegrid.pck'),'rb')
         pvalue = 1015.018
-        pfile.close()
+        pkl_file.close()
         value = self.gridobj.sampleGrid(self.ilon, self.ilat)
         self.numpyAssertAlmostEqual(numpy.array(pvalue), numpy.array(value))
 

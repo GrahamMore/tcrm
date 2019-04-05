@@ -33,8 +33,8 @@
 import os
 import sys
 import unittest
-import cPickle
-import NumpyTestCase
+import pickle
+from tests import NumpyTestCase
 import numpy
 
 # Add parent folder to python path
@@ -46,17 +46,17 @@ from Utilities.files import flStartLog
 class TestGPD(NumpyTestCase.NumpyTestCase):
 
     def setUp(self):
-        pfile = open(os.path.join(unittest_dir, 'test_data', 'testGPD.pck'),'r')
-        self.values = cPickle.load(pfile)
-        self.mu = cPickle.load(pfile)
-        self.scale = cPickle.load(pfile)
-        self.shape = cPickle.load(pfile)
-        self.w = cPickle.load(pfile)
-        self.rate = cPickle.load(pfile)
+        pkl_file = open(os.path.join(unittest_dir, 'test_data', 'testGPD.pck'),'rb')
+        self.values = pickle.load(pkl_file,encoding='latin')
+        self.mu = pickle.load(pkl_file,encoding='latin')
+        self.scale = pickle.load(pkl_file,encoding='latin')
+        self.shape = pickle.load(pkl_file,encoding='latin')
+        self.w = pickle.load(pkl_file,encoding='latin')
+        self.rate = pickle.load(pkl_file,encoding='latin')
 
         self.years = numpy.array((2,5,10,20,25,50,100,200,250,500,1000,2000,5000,10000))
 
-        pfile.close()
+        pkl_file.close()
 
 
     def test_gpdfit(self):

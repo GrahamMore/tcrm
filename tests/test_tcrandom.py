@@ -9,25 +9,26 @@ import numpy as np
 
 from numpy.testing import assert_almost_equal
 from Utilities.tcrandom import Random
+from randomgen import RandomGenerator,PCG64,MT19937
 
 class TestRandom(unittest.TestCase):
 
     def setUp(self):
 
         self.seed = 1
-        self.prng = Random()
+        self.prng = Random(MT19937(self.seed))
 
 
     def testLogistic(self):
         """Testing logistic variates"""
         self.prng.seed(self.seed)
-        result = self.prng.logisticvariate(0, 1)
+        result = self.prng.logistic(0, 1)
         assert_almost_equal(result, -1.86290986)
 
     def testNormal(self):
         """Testing normal variates"""
         self.prng.seed(self.seed)
-        result = self.prng.normalvariate(0, 1)
+        result = self.prng.normal(0, 1)
         assert_almost_equal(result, 0.607455857)
 
     def testCauchy(self):

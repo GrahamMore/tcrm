@@ -29,12 +29,13 @@
 
  $Id: TestStat.py 563 2007-10-24 02:52:40Z carthur $
 """
-import os, sys
+import sys
 import unittest
 from scipy import array, zeros
-import NumpyTestCase
+from tests import NumpyTestCase, pathLocate
+
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 

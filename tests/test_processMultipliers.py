@@ -6,7 +6,7 @@ Unit test suite for processMultipliers.py
 
 import sys
 import os
-from os.path import join as pjoin, exists, dirname
+from os.path import exists
 import unittest
 import tempfile
 import shutil
@@ -14,12 +14,12 @@ import shutil
 from numpy.testing import assert_almost_equal
 import numpy as np
 
-from osgeo import osr, gdal
+import gdal
 from osgeo.gdalconst import *
 from netCDF4 import Dataset
 
 try:
-    import pathLocate
+    from tests import pathLocate
 except:
     from unittests import pathLocate
 
@@ -236,8 +236,8 @@ class TestProcessMultipliers(unittest.TestCase):
         ncobj.close()
         del m4_max
         if keep:
-            print "f_nc.name", f_nc.name
-            print "f_img.name", f_img.name
+            print("f_nc.name", f_nc.name)
+            print("f_img.name", f_img.name)
         else:
             os.remove(f_nc.name)
             os.remove(f_img.name)

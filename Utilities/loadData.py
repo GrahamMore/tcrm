@@ -26,13 +26,10 @@ track files.
 import sys
 import logging
 import numpy as np
-import metutils
-import maputils
-import nctools
-import interp3d
-
 from datetime import datetime, timedelta
-from columns import colReadCSV
+from Utilities.columns import colReadCSV
+
+from Utilities import metutils,maputils,nctools,interp3d
 from Utilities.config import ConfigParser, cnfGetIniValue
 from Utilities.track import Track, trackFields, trackTypes
 
@@ -153,7 +150,7 @@ tcrm = {
 """
 
 def getSpeedBearing(index, lon, lat, deltatime, ieast=1,
-                    missingValue=sys.maxint):
+                    missingValue=sys.maxsize):
     """
     Calculate the speed and bearing of a TC.
 
@@ -394,12 +391,12 @@ def date2ymdh(dates, datefmt='%Y-%m-%d %H:%M:%S'):
     minute = np.empty(len(dates), 'i')
     datetimes = np.empty(len(dates), datetime)
 
-    for i in xrange(len(dates)):
+    for i in range(len(dates)):
         try:
             d = datetime.strptime(str(dates[i]), datefmt)
         except ValueError as e:
             LOG.exception("Error in date information for record {0}".format(i))
-            LOG.exception(e.message)
+            LOG.exception(e)
             raise
         else:
             year[i] = d.year
@@ -455,7 +452,7 @@ def parseDates(data, indicator, datefmt='%Y-%m-%d %H:%M:%S'):
         except (ValueError, KeyError):
             if hour.max() >= 100:
                 minute = np.mod(hour, 100)
-                hour = hour / 100
+                hour = (hour / 100).astype(np.int)
             else:
                 LOG.warning("Missing minute data from input data" + \
                                "- setting minutes to 00 for all times")
@@ -613,10 +610,10 @@ def julianDays(year, month, day, hour, minute):
     jyear = np.copy(year)
     jyear[np.where(jyear < 1900)] = 1904
     day = [datetime(jyear[i], month[i], day[i], hour[i], minute[i],
-                    second[i]) for i in xrange(year.size)]
+                    second[i]) for i in range(year.size)]
 
     jdays = np.array([int(day[i].strftime("%j")) for
-                      i in xrange(year.size)])
+                      i in range(year.size)])
     return jdays
 
 
@@ -664,7 +661,7 @@ def getPoci(penv, pcentre, lat, jdays, eps,
             coeffs=[2324.1564738613392, -0.6539853183796136,
                     -1.3984456535888878, 0.00074072928008818927,
                     0.0044469231429346088, -1.4337623534206905],
-            missingValue=sys.maxint):
+            missingValue=sys.maxsize):
     """
     Calculate a modified pressure for the outermost closed isobar, based
     on a model of daily long-term mean SLP values, central pressure,
@@ -684,8 +681,8 @@ def getPoci(penv, pcentre, lat, jdays, eps,
     """
 
     if len(coeffs) < 6:
-        LOG.warn("Insufficient coefficients for poci calculation")
-        LOG.warn("Using default values")
+        LOG.warning("Insufficient coefficients for poci calculation")
+        LOG.warning("Using default values")
         coeffs=[2324.1564738613392, -0.6539853183796136,
                 -1.3984456535888878, 0.00074072928008818927,
                 0.0044469231429346088, -1.4337623534206905]
@@ -718,7 +715,7 @@ def getPoci(penv, pcentre, lat, jdays, eps,
     
 
 def filterPressure(pressure, inputPressureUnits='hPa',
-                   missingValue=sys.maxint):
+                   missingValue=sys.maxsize):
     """
     Filter pressure values to remove any non-physical values.
 
@@ -746,7 +743,7 @@ def filterPressure(pressure, inputPressureUnits='hPa',
                         missingValue, pressure)
     return pressure
 
-def getMinPressure(track, missingValue=sys.maxint):
+def getMinPressure(track, missingValue=sys.maxsize):
     """
     Determine the minimum pressure of a :class:`Track` instance
 
@@ -764,7 +761,7 @@ def getMinPressure(track, missingValue=sys.maxint):
     else:
         track.trackMinPressure = p[p != missingValue].min()
 
-def getMaxWind(track, missingValue=sys.maxint):
+def getMaxWind(track, missingValue=sys.maxsize):
     """
     Determine the maximum wind speed of a :class:`Track` instance
 
@@ -874,7 +871,7 @@ def loadTrackFile(configFile, trackFile, source, missingValue=0,
                               inputPressureUnits, missingValue)
     try:
         windspeed = np.array(inputData['vmax'], 'd')
-        novalue_index = np.where(windspeed == sys.maxint)
+        novalue_index = np.where(windspeed == sys.maxsize)
         windspeed = metutils.convert(windspeed, inputSpeedUnits, "mps")
         windspeed[novalue_index] = missingValue
     except (ValueError, KeyError):

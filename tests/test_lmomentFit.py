@@ -33,9 +33,8 @@
 import os
 import sys
 import unittest
-import cPickle
-import NumpyTestCase
-import numpy
+import pickle
+from tests import NumpyTestCase
 
 # Add parent folder to python path
 unittest_dir = os.path.dirname(os.path.realpath( __file__ ))
@@ -46,12 +45,12 @@ from Utilities.files import flStartLog
 class Testlmoments(NumpyTestCase.NumpyTestCase):
 
     def setUp(self):
-        pfile = open(os.path.join(unittest_dir, 'test_data', 'testlmom.pck'),'r')
-        self.values = cPickle.load(pfile)
-        self.moments = cPickle.load(pfile)
-        self.params = cPickle.load(pfile)
+        pkl_file = open(os.path.join(unittest_dir, 'test_data', 'testlmom.pck'),'rb')
+        self.values = pickle.load(pkl_file,encoding='latin1')
+        self.moments = pickle.load(pkl_file,encoding='latin1')
+        self.params = pickle.load(pkl_file,encoding='latin1')
 
-        pfile.close()
+        pkl_file.close()
 
 
     def test_samlmu_list(self):

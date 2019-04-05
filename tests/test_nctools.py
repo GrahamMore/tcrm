@@ -12,13 +12,13 @@ import os
 import sys
 from os.path import join as pjoin
 import unittest
-import NumpyTestCase
+from tests import NumpyTestCase, pathLocate
 import numpy as np
 import netCDF4
 from datetime import datetime, timedelta
 
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 

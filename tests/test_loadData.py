@@ -5,10 +5,10 @@ from numpy.testing import assert_almost_equal
 import os
 import sys
 from datetime import datetime
-import cPickle
-import NumpyTestCase
+import pickle
+
 try:
-    import pathLocate
+    from tests import pathLocate
 except:
     from unittests import pathLocate
 
@@ -25,9 +25,9 @@ class TestInitialPositions(unittest.TestCase):
 
     def setUp(self):
 
-        self.inputData = cPickle.load(open(os.path.join(unittest_dir,
+        self.inputData = pickle.load(open(os.path.join(unittest_dir,
                                                         'test_data',
-                                                        'loadDataInput.pck')))
+                                                        'loadDataInput.pck'),'rb'),encoding='latin')
         #self.indexData = dict(index=self.inputData['index'])
         self.serialData = dict(tcserialno=self.inputData['tcserialno'])
         self.seasonData = dict(season=self.inputData['season'],
@@ -35,16 +35,16 @@ class TestInitialPositions(unittest.TestCase):
         self.missingFields = dict(lon=self.inputData['lon'],
                                   lat=self.inputData['lat'])
 
-        self.numData = cPickle.load(open(os.path.join(unittest_dir,
+        self.numData = pickle.load(open(os.path.join(unittest_dir,
                                                       'test_data',
-                                                      'loadDataNumber.pck')))
+                                                      'loadDataNumber.pck'),'rb'),encoding='latin')
 
-        self.testIndex = cPickle.load(open(os.path.join(unittest_dir,
+        self.testIndex = pickle.load(open(os.path.join(unittest_dir,
                                                         'test_data',
-                                                        'loadDataIndex.pck')))
-        self.numIndex = cPickle.load(open(os.path.join(unittest_dir,
+                                                        'loadDataIndex.pck'),'rb'),encoding='latin')
+        self.numIndex = pickle.load(open(os.path.join(unittest_dir,
                                                        'test_data',
-                                                       'loadNumIndex.pck')))
+                                                       'loadNumIndex.pck'),'rb'),encoding='latin')
 
     def test_getInitPos_fromSerialNo(self):
         """Test to ensure the function returns correct values based on serial number"""
@@ -75,20 +75,23 @@ class TestDateParsing(unittest.TestCase):
 
     def setUp(self):
         """ """
-        input_file = open(os.path.join(unittest_dir, 'test_data',
-                                       'parseDates.pck'))
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
+                                       'parseDates.pck'),'rb')
         self.dateformat = '%Y-%m-%d %H:%M:%S'
-        self.inputData = cPickle.load(input_file)
-        self.indicator = cPickle.load(input_file)
-        self.year = cPickle.load(input_file)
-        self.month = cPickle.load(input_file)
-        self.day = cPickle.load(input_file)
-        self.hour = cPickle.load(input_file)
-        self.minute = cPickle.load(input_file)
+        self.inputData = pickle.load(pkl_file,encoding='latin')
+        self.indicator = pickle.load(pkl_file,encoding='latin')
+        self.year = pickle.load(pkl_file,encoding='latin')
+        self.month = pickle.load(pkl_file,encoding='latin')
+        self.day = pickle.load(pkl_file,encoding='latin')
+        self.hour = pickle.load(pkl_file,encoding='latin')
+        self.minute = pickle.load(pkl_file,encoding='latin')
         # For testing 'HHMM' formatted times:
-        self.hourmin = cPickle.load(input_file)
+        self.hourmin = pickle.load(pkl_file,encoding='latin')
+        for item in self.inputData.keys():
+            if type(self.inputData[item][0]) == np.bytes_:
+                self.inputData[item] = self.inputData[item].astype(np.str)
 
-        input_file.close()
+        pkl_file.close()
         self.input_dates = dict(date=self.inputData['date'])
 
 
@@ -151,17 +154,17 @@ class TestDateParsing(unittest.TestCase):
 class TestDateConversion(unittest.TestCase):
     def setUp(self):
 
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
-                                      'date2ymhd.pck'))
-        self.goodInputDates = cPickle.load(inputFile)
-        self.badInputDates = cPickle.load(inputFile)
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
+                                      'date2ymhd.pck'),'rb')
+        self.goodInputDates = pickle.load(pkl_file,encoding='latin').astype(np.str)
+        self.badInputDates = pickle.load(pkl_file,encoding='latin').astype(np.str)
         self.dateformat = '%Y-%m-%d %H:%M:%S'
-        self.outputYear = cPickle.load(inputFile)
-        self.outputMonth = cPickle.load(inputFile)
-        self.outputDay = cPickle.load(inputFile)
-        self.outputHour = cPickle.load(inputFile)
-        self.outputMinute = cPickle.load(inputFile)
-        inputFile.close()
+        self.outputYear = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputMonth = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputDay = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputHour = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputMinute = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        pkl_file.close()
 
 
     def test_date2ymdh(self):
@@ -209,18 +212,18 @@ class TestDateConversion(unittest.TestCase):
 class TestAgeParsing(unittest.TestCase):
 
     def setUp(self):
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
                                                    'parseAge.pck'))
 
-        self.inputData = cPickle.load(inputFile)
-        self.indicator = cPickle.load(inputFile)
+        self.inputData = pickle.load(pkl_file,encoding='latin').astype(np.str)
+        self.indicator = pickle.load(pkl_file,encoding='latin').astype(np.str)
 
-        self.outputYear = cPickle.load(inputFile)
-        self.outputMonth = cPickle.load(inputFile)
-        self.outputDay = cPickle.load(inputFile)
-        self.outputHour = cPickle.load(inputFile)
-        self.outputMinute = cPickle.load(inputFile)
-        inputFile.close()
+        self.outputYear = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputMonth = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputDay = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputHour = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        self.outputMinute = pickle.load(pkl_file,encoding='latin').astype(np.int32)
+        pkl_file.close()
 
 #    def test_parseAge(self):
 #        """Test parseAge function"""
@@ -236,15 +239,15 @@ class TestAgeParsing(unittest.TestCase):
 class TestTimeDeltas(unittest.TestCase):
 
     def setUp(self):
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
-                                      'getTimeDelta.pck'))
-        self.inputYear = cPickle.load(inputFile)
-        self.inputMonth = cPickle.load(inputFile)
-        self.inputDay = cPickle.load(inputFile)
-        self.inputHour = cPickle.load(inputFile)
-        self.inputMinute = cPickle.load(inputFile)
-        self.outputDT = cPickle.load(inputFile)
-        inputFile.close()
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
+                                      'getTimeDelta.pck'),'rb')
+        self.inputYear = pickle.load(pkl_file,encoding='latin')
+        self.inputMonth = pickle.load(pkl_file,encoding='latin')
+        self.inputDay = pickle.load(pkl_file,encoding='latin')
+        self.inputHour = pickle.load(pkl_file,encoding='latin')
+        self.inputMinute = pickle.load(pkl_file,encoding='latin')
+        self.outputDT = pickle.load(pkl_file,encoding='latin')
+        pkl_file.close()
 
     def test_getTimeDelta(self):
         """Test getTimeDelta function"""
@@ -277,15 +280,15 @@ class TestTimeDeltas(unittest.TestCase):
 class TestTime(unittest.TestCase):
 
     def setUp(self):
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
-                                      'getTime.pck'))
-        self.inputYear = cPickle.load(inputFile)
-        self.inputMonth = cPickle.load(inputFile)
-        self.inputDay = cPickle.load(inputFile)
-        self.inputHour = cPickle.load(inputFile)
-        self.inputMinute = cPickle.load(inputFile)
-        self.outputTime = cPickle.load(inputFile)
-        inputFile.close()
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
+                                      'getTime.pck'),'rb')
+        self.inputYear = pickle.load(pkl_file,encoding='latin')
+        self.inputMonth = pickle.load(pkl_file,encoding='latin')
+        self.inputDay = pickle.load(pkl_file,encoding='latin')
+        self.inputHour = pickle.load(pkl_file,encoding='latin')
+        self.inputMinute = pickle.load(pkl_file,encoding='latin')
+        self.outputTime = pickle.load(pkl_file,encoding='latin')
+        pkl_file.close()
 
     def test_getTime(self):
         """Test getTime function"""
@@ -318,15 +321,15 @@ class TestTime(unittest.TestCase):
 class TestJulianDays(unittest.TestCase):
 
     def setUp(self):
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
-                                      'julianDays.pck'))
-        self.inputYear = cPickle.load(inputFile)
-        self.inputMonth = cPickle.load(inputFile)
-        self.inputDay = cPickle.load(inputFile)
-        self.inputHour = cPickle.load(inputFile)
-        self.inputMinute = cPickle.load(inputFile)
-        self.outputJdays = cPickle.load(inputFile)
-        inputFile.close()
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
+                                      'julianDays.pck'),'rb')
+        self.inputYear = pickle.load(pkl_file,encoding='latin')
+        self.inputMonth = pickle.load(pkl_file,encoding='latin')
+        self.inputDay = pickle.load(pkl_file,encoding='latin')
+        self.inputHour = pickle.load(pkl_file,encoding='latin')
+        self.inputMinute = pickle.load(pkl_file,encoding='latin')
+        self.outputJdays = pickle.load(pkl_file,encoding='latin')
+        pkl_file.close()
 
     def test_julianDays(self):
         """Test julianDays function"""
@@ -365,16 +368,16 @@ class TestLoadingTrackFiles(unittest.TestCase):
                                       'test_trackset.csv')
         self.source = 'TESTSOURCE'
 
-        inputFile = open(os.path.join(unittest_dir, 'test_data',
+        pkl_file = open(os.path.join(unittest_dir, 'test_data',
                                       'loadTrackFile.pck'))
-        self.trackData = cPickle.load(inputFile)
+        self.trackData = pickle.load(pkl_file,encoding='latin')
 
 class TestGetPoci(unittest.TestCase):
 
     def setUp(self):
         np.random.seed(10)
         self.penv = np.arange(1000, 1011, 1)
-        self.pcentre = np.arange(900, 1001, 10)
+        self.pcentre = np.arange(900, 1001, 10).astype(np.float64)
         self.lat = np.arange(-24, -2, 2)
         self.jdays = np.arange(1, 365, 36)
 
@@ -409,7 +412,7 @@ class TestGetPoci(unittest.TestCase):
         """getPoci filters values where input data is missing"""
         eps = np.random.normal(0, scale=2.5717404300409674)
         pcentre = self.pcentre
-        pcentre[-1] = sys.maxint
+        pcentre[-1] = sys.maxsize
         Poci = loadData.getPoci(self.penv, pcentre, self.lat,
                                 self.jdays, eps)
         PociOutput = np.array([1016.11315678, 1014.75370624,
@@ -456,11 +459,11 @@ class TestGetPoci(unittest.TestCase):
 #class TestFilterPressure(unittest.TestCase):
 #
 #    def setUp(self):
-#        inputFile = open(os.path.join(unittest_dir, 'test_data',
+#        pkl_file = open(os.path.join(unittest_dir, 'test_data',
 #                                      'filterPressure.pck'))
-#        self.inputdata = cPickle.load(inputFile)
-#        self.outputdata = cPickle.load(inputFile)
-#        inputFile.close()
+#        self.inputdata = cPickle.load(pkl_file,encoding='latin')
+#        self.outputdata = cPickle.load(pkl_file,encoding='latin')
+#        pkl_file.close()
 #
 #    def test_filterPressure(self):
 #        """Test filterPressure function"""

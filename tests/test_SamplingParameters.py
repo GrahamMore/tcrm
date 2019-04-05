@@ -26,12 +26,13 @@
  $Id$
 """
 import os, sys
-import cPickle
+import pickle
 import unittest
 from scipy import random
-import NumpyTestCase
+from tests import NumpyTestCase, pathLocate
+
 try:
-    import pathLocate
+    pass
 except:
     from unittests import pathLocate
 
@@ -39,20 +40,19 @@ except:
 unittest_dir = pathLocate.getUnitTestDirectory()
 sys.path.append(pathLocate.getRootDirectory())
 from StatInterface import SamplingParameters
-from Utilities.files import flStartLog
 
 
 class TestSamplingParameters(NumpyTestCase.NumpyTestCase):
 
     def setUp(self):
         self.numberOfSamples = 1000
-        pr = cPickle.load(open(os.path.join(unittest_dir, 'test_data', 'sampling_parameters_xacy.pck')))
+        pr = pickle.load(open(os.path.join(unittest_dir, 'test_data', 'sampling_parameters_xacy.pck'),'rb'),encoding='latin')
         self.sampPar = SamplingParameters.SamplingParameters(pr)
         random.seed(10)
 
     def test_GenerateSamples(self):
         """Testing GenerateSamples"""
-        samples = cPickle.load(open(os.path.join(unittest_dir, 'test_data', 'sampling_parameters_samples.pck')))
+        samples = pickle.load(open(os.path.join(unittest_dir, 'test_data', 'sampling_parameters_samples.pck'),'rb'),encoding='latin')
         samplesp = self.sampPar.generateSamples(self.numberOfSamples)
         self.numpyAssertAlmostEqual(samples, samplesp)
 

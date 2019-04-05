@@ -197,7 +197,7 @@ def ncReadTrackData(trackfile):
 
     g = ncobj.groups
     tracks = []
-    if g.has_key('tracks'):
+    if 'tracks' in g:
         tgroup = g['tracks'].groups
         ntracks = len(tgroup)
         for i, (t, data) in enumerate(tgroup.items()):
@@ -227,7 +227,7 @@ def ncReadTrackData(trackfile):
             tracks.append(track)
 
     else:
-        log.warn(TRACK_EMPTY_GROUP.format(trackfile))
+        log.warning(TRACK_EMPTY_GROUP.format(trackfile))
 
     ncobj.close()
     return tracks
